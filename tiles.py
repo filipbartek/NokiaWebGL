@@ -321,3 +321,166 @@ if __name__ == '__main__':
             jpg = open('out_%s_%d.jpg' % (coordstr,index), 'wb')
             jpg.write(urlopen(image_url).read())
 
+def saveTiles(tiles, filename='out'):
+    """
+    Save tiles into an OBJ file accompanied with a MTL file and one
+    or more texture files.
+    """
+    import os
+    import urlparse
+
+    mtl_filename = '%s.mtl' % (filename)
+    obj_filename = '%s.obj' % (filename)
+
+    obj = open(obj_filename, 'w')
+    mtl = open(mtl_filename, 'w')
+
+    # TODO: Print file header with human readable specification of ROI.
+    print >> obj, 'mtllib %s' % (mtl_filename)
+
+    # Vertex index offset
+    v_offset = 1
+
+    for (textures, column, row, offset_x, offset_y) in tiles:
+        tile_name = (column, row)
+
+        # Object name (tile)
+        # TODO: Print proper tile name.
+        #print >> obj, 'o %s' % (tile_name)
+
+        for (index, (vertices, faces, image_url)) in enumerate(textures):
+            image_path = urlparse.urlparse(image_url).path
+            image_filename = os.path.split(image_path)[1]
+            mtl_name = os.path.splitext(image_filename)[0]
+
+            # Add material in MTL file
+            print >> mtl, 'newmtl %s' % (mtl_name) #material name
+            print >> mtl, 'map_Ka %s' % (image_filename) #ambient texture
+            print >> mtl, 'map_Kd %s' % (image_filename) #diffuse texture
+
+            # OBJ file:
+
+            # Group name (tile component)
+            print >> obj, 'g %s' % (mtl_name)
+
+            # Material for this group
+            print >> obj, 'usemtl %s' % (mtl_name)
+
+            # Vertices
+            for (x, y, z, u, v) in vertices:
+                # TODO: Set offsetx and offsety
+                print >> obj, 'v %.1f %.1f %.1f' % (x + offset_x, y + offset_y, z)
+
+            # Texture coordinates
+            for (x, y, z, u, v) in vertices:
+                print >> obj, 'vt %.6f %.6f' % (u, v)
+
+            # Faces
+            for (v0, v1, v2) in faces:
+                v0_file = v0 + v_offset
+                v1_file = v1 + v_offset
+                v2_file = v2 + v_offset
+                print >> obj, 'f %d/%d %d/%d %d/%d' % (v0_file, v0_file, v1_file, v1_file, v2_file, v2_file)
+
+            jpg = open('%s' % (image_filename), 'wb')
+            jpg.write(urlopen(image_url).read())
+
+            # Increase vertex index offset
+            v_offset += len(vertices)
+
+def intCoord(lat, lon, zoom=19):
+    import types
+    import ModestMaps
+    assert type(zoom) is types.IntType
+    floatCoord = GetData(lat, lon, zoom)
+    result = ModestMaps.Core.Coordinate(int(floatCoord.row), int(floatCoord.column), floatCoord.zoom)
+    assert type(result.zoom) is types.IntType
+    return result
+
+# These values are used to offset the tiles in the result composed OBJ file
+tile_size_x = 256.0
+tile_size_y = 256.0
+
+def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
+    """
+    Save the region of interest specified by the parameters to an OBJ file
+    accompanied with a MTL file and one or more texture files.
+    """
+
+    import ModestMaps
+
+    assert latEnd >= latBegin
+    assert lonEnd >= lonBegin
+
+    coordBegin = intCoord(latBegin, lonBegin, zoom)
+    coordEnd = intCoord(latEnd, lonEnd, zoom)
+
+    columnBegin = coordBegin.column
+    columnEnd = coordEnd.column
+    assert columnEnd >= columnBegin
+    # Transformation swaps row polarity
+    rowEnd = coordBegin.row
+    rowBegin = coordEnd.row
+    assert rowEnd >= rowBegin
+
+    columnNum = columnEnd - columnBegin + 1
+    rowNum = rowEnd - rowBegin + 1
+
+    # Get vertices, faces and textures for each tile
+    tiles = []
+    for columnId in range(columnNum):
+        column = columnBegin + columnId
+        for rowId in range(rowNum):
+            row = rowBegin + rowId
+            coord = ModestMaps.Core.Coordinate(row, column, zoom)
+            texturesx = get_tile_data(coord)
+            offset_x = columnId * tile_size_x
+            offset_y = (rowNum - rowId - 1) * tile_size_y
+            tiles.append((texturesx, column, row, offset_x, offset_y))
+
+    # Save the structure in and OBJ file
+    saveTiles(tiles)
+
+if __name__ == '__main__':
+    prague_lat = 50.0893
+    prague_lon = 14.3994
+
+    latBegin = prague_lat
+    latEnd = prague_lat
+    lonBegin = prague_lon
+    lonEnd = prague_lon
+    zoom = 19
+
+    # TODO: Let the user specify output directory and filename(s).
+    if len(argv) == 1:
+        logging.debug('Fetching default ROI')
+    elif len(argv) == 3:
+        logging.debug('Fetching one tile ROI at default zoom level')
+        latBegin = float(argv[1])
+        latEnd = latBegin
+        lonBegin = float(argv[2])
+        lonEnd = lonBegin
+    elif len(argv) == 4:
+        logging.debug('Fetching one tile ROI at custom zoom level')
+        latBegin = float(argv[1])
+        latEnd = latBegin
+        lonBegin = float(argv[2])
+        lonEnd = lonBegin
+        zoom = int(argv[3])
+    elif len(argv) == 5:
+        logging.debug('Fetching range ROI at default zoom level')
+        latBegin = float(argv[1])
+        latEnd = float(argv[2])
+        lonBegin = float(argv[3])
+        lonEnd = float(argv[4])
+    elif len(argv) == 6:
+        logging.debug('Fetching range ROI at custom zoom level')
+        latBegin = float(argv[1])
+        latEnd = float(argv[2])
+        lonBegin = float(argv[3])
+        lonEnd = float(argv[4])
+        zoom = int(argv[5])
+    else:
+        raise Exception('Incorrect number of arguments')
+
+    saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom)
