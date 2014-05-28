@@ -7,8 +7,6 @@ from urlparse import urljoin
 from urllib import urlopen
 
 from ModestMaps.Geo import Location, MercatorProjection, deriveTransformation
-from ModestMaps.Providers import IMapProvider
-from ModestMaps.Core import Coordinate
 
 from TileStache.Core import KnownUnknown
 
