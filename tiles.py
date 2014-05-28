@@ -275,17 +275,10 @@ if __name__ == '__main__':
     
     def GetData(latx,lonx,zoomx):
         p = get_projection()
-        
-        if len(argv) == 1:
-            lat, lon = latx, lonx
-            zoom = zoomx
 
-        elif len(argv) == 4:
-            lat, lon = map(float, argv[1:3])
-            zoom = int(argv[3])
-
-        else:
-            raise Exception('oops')
+        lat = latx
+        lon = lonx
+        zoom = zoomx
     
         loc = Location(lat, lon)
         coord = p.locationCoordinate(loc).zoomTo(zoom)
