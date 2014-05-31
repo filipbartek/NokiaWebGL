@@ -284,42 +284,6 @@ if __name__ == '__main__':
         coord = p.locationCoordinate(loc).zoomTo(zoom)
     
         return coord
-   
-    
-    #
-    # Output .obj files and JPEGs locally.
-    #
-    def OutputTile(coord,textures,objnum,offsetx,offsety):
-        for (index, (vertices, faces, image_url)) in enumerate(textures):
-            
-            #coordstr = (str(coord.row) +"_"+ str(coord.column)+"_"+str(coord.zoom))
-            coordstr = str(objnum)+"_OBJECT"#simpler filename
-            
-            obj = open('out_%s_%d.obj' % (coordstr,index), 'w')
-
-            mtl = open('out_%s_%d.mtl' % (coordstr,index), 'w')
-            #material file
-            print >> mtl, 'newmtl out_%s_%d_mat' % (coordstr,index) #material name
-            print >> mtl, 'map_Ka out_%s_%d.jpg' % (coordstr,index) #ambient texture
-            print >> mtl, 'map_Kd out_%s_%d.jpg' % (coordstr,index) #diffuse texture
-            # material lib name
-            print >> obj, 'mtllib out_%s_%d.mtl' % (coordstr,index)
-            # object name
-            print >> obj, 'g out_%s_%d' % (coordstr,index)
-            # material to use
-            print >> obj, 'usemtl out_%s_%d_mat' % (coordstr,index)
-            # object file
-            for (x, y, z, u, v) in vertices:
-                print >> obj, 'v %.1f %.1f %.1f' % (x+offsetx, y+offsety, z)
-            
-            for (x, y, z, u, v) in vertices:
-                print >> obj, 'vt %.6f %.6f' % (u, v)
-            
-            for (v0, v1, v2) in faces:
-                print >> obj, 'f %d/%d %d/%d %d/%d' % (v0+1, v0+1, v1+1, v1+1, v2+1, v2+1)
-        
-            jpg = open('out_%s_%d.jpg' % (coordstr,index), 'wb')
-            jpg.write(urlopen(image_url).read())
 
 def saveTiles(tiles, filename='out'):
     """
