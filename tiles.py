@@ -272,7 +272,6 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG, format='%(filename)s %(lineno)d - %(msg)s')
 
-    
     def GetData(latx,lonx,zoomx):
         p = get_projection()
 
