@@ -433,10 +433,10 @@ def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
         for rowId in range(rowNum):
             row = rowBegin + rowId
             coord = ModestMaps.Core.Coordinate(row, column, zoom)
-            texturesx = get_tile_data(coord)
+            textures = get_tile_data(coord)
             offset_x = columnId * tile_size_x
             offset_y = (rowNum - rowId - 1) * tile_size_y
-            tiles.append((texturesx, column, row, offset_x, offset_y))
+            tiles.append((textures, column, row, offset_x, offset_y))
 
     # Save the structure in and OBJ file
     saveTiles(tiles)
