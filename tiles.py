@@ -285,31 +285,41 @@ if __name__ == '__main__':
     
         return coord
 
-def saveTiles(tiles, filename='out'):
+class TileCombiner():
     """
-    Save tiles into an OBJ file accompanied with a MTL file and one
+    Saves tiles into an OBJ file accompanied with a MTL file and one
     or more texture files.
     """
-    import os
-    import urlparse
 
-    mtl_filename = '%s.mtl' % (filename)
-    obj_filename = '%s.obj' % (filename)
+    def __init__(self, filename='out', dir=''):
+        import os
 
-    obj = open(obj_filename, 'w')
-    mtl = open(mtl_filename, 'w')
+        self.path = dir
 
-    # TODO: Print file header with human readable specification of ROI.
-    print >> obj, 'mtllib %s' % (mtl_filename)
+        if not os.path.exists(self.path):
+            os.makedirs(self.path)
 
-    # Vertex index offset
-    v_offset = 1
+        obj_filename = '%s.obj' % (filename)
+        mtl_filename = '%s.mtl' % (filename)
 
-    for (textures, column, row, offset_x, offset_y) in tiles:
-        tile_name = (column, row)
+        self.obj = open(os.path.join(self.path, obj_filename), 'w')
+        self.mtl = open(os.path.join(self.path, mtl_filename), 'w')
 
-        # Object name (tile)
-        # TODO: Print proper tile name.
+        # TODO: Print file header with human readable specification of ROI.
+        print >> self.obj, 'mtllib %s' % (mtl_filename)
+
+        self.v_offset = 1
+
+    def __del__(self):
+        self.obj.close()
+        self.mtl.close()
+
+    def addTile(self, textures, offset_x=0, offset_y=0):
+        import os
+        import urlparse
+
+        # TODO: Print tile name.
+        #tile_name = str((offset_x, offset_y))
         #print >> obj, 'o %s' % (tile_name)
 
         for (index, (vertices, faces, image_url)) in enumerate(textures):
@@ -318,39 +328,38 @@ def saveTiles(tiles, filename='out'):
             mtl_name = os.path.splitext(image_filename)[0]
 
             # Add material in MTL file
-            print >> mtl, 'newmtl %s' % (mtl_name) #material name
-            print >> mtl, 'map_Ka %s' % (image_filename) #ambient texture
-            print >> mtl, 'map_Kd %s' % (image_filename) #diffuse texture
+            print >> self.mtl, 'newmtl %s' % (mtl_name) #material name
+            print >> self.mtl, 'map_Ka %s' % (image_filename) #ambient texture
+            print >> self.mtl, 'map_Kd %s' % (image_filename) #diffuse texture
 
             # OBJ file:
 
             # Group name (tile component)
-            print >> obj, 'g %s' % (mtl_name)
+            print >> self.obj, 'g %s' % (mtl_name)
 
             # Material for this group
-            print >> obj, 'usemtl %s' % (mtl_name)
+            print >> self.obj, 'usemtl %s' % (mtl_name)
 
             # Vertices
             for (x, y, z, u, v) in vertices:
-                # TODO: Set offsetx and offsety
-                print >> obj, 'v %.1f %.1f %.1f' % (x + offset_x, y + offset_y, z)
+                print >> self.obj, 'v %.1f %.1f %.1f' % (x + offset_x, y + offset_y, z)
 
             # Texture coordinates
             for (x, y, z, u, v) in vertices:
-                print >> obj, 'vt %.6f %.6f' % (u, v)
+                print >> self.obj, 'vt %.6f %.6f' % (u, v)
 
             # Faces
             for (v0, v1, v2) in faces:
-                v0_file = v0 + v_offset
-                v1_file = v1 + v_offset
-                v2_file = v2 + v_offset
-                print >> obj, 'f %d/%d %d/%d %d/%d' % (v0_file, v0_file, v1_file, v1_file, v2_file, v2_file)
+                v0_file = v0 + self.v_offset
+                v1_file = v1 + self.v_offset
+                v2_file = v2 + self.v_offset
+                print >> self.obj, 'f %d/%d %d/%d %d/%d' % (v0_file, v0_file, v1_file, v1_file, v2_file, v2_file)
 
-            jpg = open('%s' % (image_filename), 'wb')
-            jpg.write(urlopen(image_url).read())
+            with open(os.path.join(self.path, image_filename), 'wb') as jpg:
+                jpg.write(urlopen(image_url).read())
 
             # Increase vertex index offset
-            v_offset += len(vertices)
+            self.v_offset += len(vertices)
 
 def intCoord(lat, lon, zoom=19):
     import types
@@ -390,6 +399,8 @@ def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
     columnNum = columnEnd - columnBegin + 1
     rowNum = rowEnd - rowBegin + 1
 
+    tc = TileCombiner('out', 'out')
+
     # Get vertices, faces and textures for each tile
     tiles = []
     for columnId in range(columnNum):
@@ -400,10 +411,7 @@ def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
             textures = get_tile_data(coord)
             offset_x = columnId * tile_size_x
             offset_y = (rowNum - rowId - 1) * tile_size_y
-            tiles.append((textures, column, row, offset_x, offset_y))
-
-    # Save the structure in and OBJ file
-    saveTiles(tiles)
+            tc.addTile(textures, offset_x, offset_y)
 
 if __name__ == '__main__':
     prague_lat = 50.0893
