@@ -399,6 +399,8 @@ def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
     columnNum = columnEnd - columnBegin + 1
     rowNum = rowEnd - rowBegin + 1
 
+    logging.debug('Tiles in ROI: %d x %d' % (columnNum, rowNum))
+
     tc = TileCombiner('out', 'out')
 
     # Get vertices, faces and textures for each tile
