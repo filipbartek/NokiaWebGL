@@ -361,12 +361,9 @@ class TileCombiner():
             self.v_offset += len(vertices)
 
 def intCoord(lat, lon, zoom=19):
-    import types
     import ModestMaps
-    assert type(zoom) is types.IntType
     floatCoord = GetData(lat, lon, zoom)
-    result = ModestMaps.Core.Coordinate(int(floatCoord.row), int(floatCoord.column), floatCoord.zoom)
-    assert type(result.zoom) is types.IntType
+    result = ModestMaps.Core.Coordinate(int(floatCoord.row), int(floatCoord.column), int(floatCoord.zoom))
     return result
 
 # These values are used to offset the tiles in the result composed OBJ file
