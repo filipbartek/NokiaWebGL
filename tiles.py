@@ -285,7 +285,7 @@ def GetData(latx,lonx,zoomx):
     return coord
 
 if __name__ == '__main__':
-    from save_roi import saveRoi
+    from save_roi import save_roi
 
     prague_lat = 50.0893
     prague_lon = 14.3994
@@ -328,4 +328,4 @@ if __name__ == '__main__':
     else:
         raise Exception('Incorrect number of arguments')
 
-    saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom)
+    save_roi(latBegin, latEnd, lonBegin, lonEnd, zoom)

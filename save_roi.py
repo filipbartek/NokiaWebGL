@@ -10,7 +10,7 @@ def intCoord(lat, lon, zoom=19):
     result = ModestMaps.Core.Coordinate(int(floatCoord.row), int(floatCoord.column), int(floatCoord.zoom))
     return result
 
-def saveRoi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
+def save_roi(latBegin, latEnd, lonBegin, lonEnd, zoom=19):
     """
     Save the region of interest specified by the parameters to an OBJ file
     accompanied with a MTL file and one or more texture files.
