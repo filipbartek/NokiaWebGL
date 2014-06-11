@@ -308,18 +308,19 @@ class TileCombiner():
         print >> self.obj, 'mtllib %s' % (mtl_filename)
 
         self.v_offset = 1
+        self.tile_id = 0
 
     def __del__(self):
         self.obj.close()
         self.mtl.close()
 
-    def addTile(self, textures, offset_x=0, offset_y=0):
+    def addTile(self, textures, offset_x=0, offset_y=0, tile_name=None):
         import os
         import urlparse
 
-        # TODO: Print tile name.
-        #tile_name = str((offset_x, offset_y))
-        #print >> obj, 'o %s' % (tile_name)
+        if tile_name is None:
+            tile_name = str(self.tile_id)
+        print >> self.obj, 'o %s' % (tile_name)
 
         for (index, (vertices, faces, image_url)) in enumerate(textures):
             image_path = urlparse.urlparse(image_url).path
@@ -359,6 +360,8 @@ class TileCombiner():
 
             # Increase vertex index offset
             self.v_offset += len(vertices)
+
+        self.tile_id += 1
 
 def intCoord(lat, lon, zoom=19):
     import ModestMaps
