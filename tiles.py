@@ -272,17 +272,17 @@ if __name__ == '__main__':
 
     logging.basicConfig(level=logging.DEBUG, format='%(filename)s %(lineno)d - %(msg)s')
 
-    def GetData(latx,lonx,zoomx):
-        p = get_projection()
+def GetData(latx,lonx,zoomx):
+    p = get_projection()
 
-        lat = latx
-        lon = lonx
-        zoom = zoomx
-    
-        loc = Location(lat, lon)
-        coord = p.locationCoordinate(loc).zoomTo(zoom)
-    
-        return coord
+    lat = latx
+    lon = lonx
+    zoom = zoomx
+
+    loc = Location(lat, lon)
+    coord = p.locationCoordinate(loc).zoomTo(zoom)
+
+    return coord
 
 def intCoord(lat, lon, zoom=19):
     import ModestMaps
